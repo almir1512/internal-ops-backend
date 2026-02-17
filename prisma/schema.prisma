@@ -12,3 +12,132 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+enum RoleName {
+  ADMIN
+  APPROVER
+  REQUESTER
+}
+
+enum ServiceRequestStatus {
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum RequestActionType {
+  SUBMIT
+  APPROVE
+  REJECT
+}
+
+model Organization {
+  id           Int       @id @default(autoincrement())
+  name         String
+  createdAt    DateTime  @default(now())
+
+  users        User[]
+  departments  Department[]
+  serviceTypes ServiceType[]
+  requests     ServiceRequest[]
+}
+
+model Department {
+  id             Int       @id @default(autoincrement())
+  name           String
+  organizationId Int
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  users          User[]
+  serviceTypes   ServiceType[]
+}
+
+model User {
+  id             Int       @id @default(autoincrement())
+  email          String
+  passwordHash   String
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+
+  organizationId Int
+  roleId         Int
+  departmentId   Int?
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  role           Role         @relation(fields: [roleId], references: [id])
+  department     Department?  @relation(fields: [departmentId], references: [id])
+
+  requests       ServiceRequest[] @relation("RequestedBy")
+  actions        RequestAction[]  @relation("PerformedBy")
+  comments       RequestComment[]
+
+  @@unique([email, organizationId])
+}
+
+model ServiceType {
+  id             Int       @id @default(autoincrement())
+  name           String
+  description    String?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+
+  organizationId Int
+  departmentId   Int
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  department     Department   @relation(fields: [departmentId], references: [id])
+
+  requests       ServiceRequest[]
+}
+
+
+model Role {
+  id    Int      @id @default(autoincrement())
+  name  RoleName @unique   // ADMIN | APPROVER | REQUESTER
+
+  users User[]
+}
+
+model ServiceRequest {
+  id             Int                   @id @default(autoincrement())
+  status         ServiceRequestStatus  // SUBMITTED | APPROVED | REJECTED
+  payload        Json
+  createdAt      DateTime              @default(now())
+
+  organizationId Int
+  serviceTypeId  Int
+  requestedById  Int
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  serviceType    ServiceType  @relation(fields: [serviceTypeId], references: [id])
+  requestedBy    User         @relation("RequestedBy", fields: [requestedById], references: [id])
+
+  actions        RequestAction[]
+  comments       RequestComment[]
+}
+
+model RequestAction {
+  id               Int                  @id @default(autoincrement())
+  action           RequestActionType    // SUBMIT | APPROVE | REJECT
+  fromStatus       ServiceRequestStatus
+  toStatus         ServiceRequestStatus
+  comment          String?
+  createdAt        DateTime             @default(now())
+
+  serviceRequestId Int
+  performedById    Int
+
+  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id])
+  performedBy      User           @relation("PerformedBy", fields: [performedById], references: [id])
+}
+
+model RequestComment {
+  id               Int       @id @default(autoincrement())
+  comment          String
+  createdAt        DateTime  @default(now())
+
+  serviceRequestId Int
+  commentedById    Int
+
+  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id])
+  commentedBy      User           @relation(fields: [commentedById], references: [id])
+}
