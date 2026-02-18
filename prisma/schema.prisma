@@ -5,14 +5,15 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 enum RoleName {
+  PLATFORM_ADMIN // SaaS owner
   ADMIN
   APPROVER
   REQUESTER
@@ -58,11 +59,11 @@ model User {
   isActive       Boolean   @default(true)
   createdAt      DateTime  @default(now())
 
-  organizationId Int
+  organizationId Int?
   roleId         Int
   departmentId   Int?
 
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  organization   Organization? @relation(fields: [organizationId], references: [id])
   role           Role         @relation(fields: [roleId], references: [id])
   department     Department?  @relation(fields: [departmentId], references: [id])
 
@@ -92,7 +93,7 @@ model ServiceType {
 
 model Role {
   id    Int      @id @default(autoincrement())
-  name  RoleName @unique   // ADMIN | APPROVER | REQUESTER
+  name  RoleName @unique   // PLATFORM_ADMIN |  ADMIN | APPROVER | REQUESTER
 
   users User[]
 }

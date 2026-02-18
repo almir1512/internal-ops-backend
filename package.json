@@ -2,7 +2,6 @@
   "name": "internal-ops-backend",
   "version": "1.0.0",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js"
@@ -12,8 +11,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@prisma/adapter-pg": "^7.4.0",
-    "@prisma/client": "^7.4.0",
+    "@prisma/adapter-pg": "^6.15.0",
+    "@prisma/client": "6.15.0",
     "bcrypt": "^6.0.0",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
@@ -26,6 +25,6 @@
     "@types/node": "^25.2.3",
     "@types/pg": "^8.16.0",
     "nodemon": "^3.1.11",
-    "prisma": "^7.4.0"
+    "prisma": "^6.15.0"
   }
 }
